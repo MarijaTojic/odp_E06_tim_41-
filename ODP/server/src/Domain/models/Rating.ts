@@ -1,8 +1,8 @@
-export class Rating {
-  public constructor(
+export interface Rating {
+  
   id: number,
   userId: number,
   contentId: number,
   ratingValue: number,
-  ) {} // 1-5
+  
 }
