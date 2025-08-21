@@ -17,8 +17,9 @@ function App() {
   return (
     <Routes>
       
+     
       <Route path="/register" element={<RegistracijaStranica authApi={authApi} />} />
-       <Route path="/content/:id" element={<ContentPage />} />
+       <Route path="/content/:id" element={<ContentPage />}  />
       <Route path="/404" element={<NotFoundStranica />} />
 
         <Route
