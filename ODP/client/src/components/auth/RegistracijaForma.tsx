@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+//import { Link } from "react-router-dom";
 import { validacijaPodatakaAuth } from "../../api_services/validators/auth/AuthValidator";
 import type { AuthFormProps } from "../../types/props/auth_form_props/AuthFormProps";
 import { useAuth } from "../../hooks/auth/useAuthHook";
@@ -64,12 +64,7 @@ export function RegistracijaForma({ authApi }: AuthFormProps) {
           Региструј се
         </button>
       </form>
-      <p className="text-center text-sm mt-4">
-        Већ имате налог?{" "}
-        <Link to="/login" className="text-blue-700 hover:underline">
-          Пријавите се
-        </Link>
-      </p>
+      
     </div>
   );
 }

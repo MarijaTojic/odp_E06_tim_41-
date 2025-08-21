@@ -1,30 +1,22 @@
-import { Router } from "express";
-import { TriviaService } from "../../Services/trivia/triviaService";
+import { Request, Response } from "express";
+import * as TriviaRepository from "../../Database/repositories/trivia/TriviaRepository";
 
-export const triviaRouter = Router();
-
-// POST /api/trivia – dodavanje trivije
-triviaRouter.post("/", async (req, res) => {
-  try {
-    const { contentId, triviaText } = req.body;
-    const trivia = await TriviaService.addTrivia(contentId, triviaText);
-    res.json(trivia);
-  } catch (err: any) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// GET /api/trivia/:contentId – sve trivije za sadržaj
-triviaRouter.get("/:contentId", async (req, res) => {
+export async function getTriviaByContent(req: Request, res: Response) {
   try {
     const contentId = parseInt(req.params.contentId);
-
-    // await jer getAllTrivia vraća Promise
-    const trivias = await TriviaService.getAllTrivia(); 
-   
-
-    
-  } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    const trivia = await TriviaRepository.getTriviaByContent(contentId);
+    res.json(trivia);
+  } catch (err) {
+    res.status(500).json({ error: "Greška pri dohvatanju trivije." });
   }
-});
+}
+
+export async function addTrivia(req: Request, res: Response) {
+  try {
+    const { contentId, text } = req.body;
+    const result = await TriviaRepository.addTrivia(contentId, text);
+    res.status(201).json({ message: "Trivija dodata", result });
+  } catch (err) {
+    res.status(500).json({ error: "Greška pri dodavanju trivije." });
+  }
+}

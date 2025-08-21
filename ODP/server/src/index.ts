@@ -1,44 +1,71 @@
 import express from "express";
-import  sequelize  from "./Database/db";
-import { User } from "./Domain/User";
-import { Content } from "./Domain/Content";
-import { Rating } from "./Domain/Rating";
-import { Trivia } from "./Domain/Trivia";
-
-import { userRouter } from "./WEBApi/userController";
-import { contentRouter } from "./WEBApi/contentController";
-import { triviaRouter } from "./WEBApi/triviaController";
+import cors from "cors";
 
 const app = express();
+const PORT = 5000;
+
+app.use(cors());
 app.use(express.json());
 
-app.use("/api/users", userRouter);
-app.use("/api/contents", contentRouter);
-app.use("/api/trivia", triviaRouter);
-
-const PORT = 3000;
-
-async function startServer() {
-  try {
-    await sequelize.sync({ force: true }); // kreira tabele
-    console.log("✅ Baza sinhronizovana");
-
-    // Seed podaci
-    const admin = await User.create({ username: "admin", password: "admin123", role: "admin" });
-    const user = await User.create({ username: "marko", password: "pass123", role: "user" });
-
-    const inception = await Content.create({ title: "Inception", type: "movie" });
-    const breaking = await Content.create({ title: "Breaking Bad", type: "series" });
-
-    await Rating.create({ userId: user.id, contentId: inception.id, ratingValue: 5 });
-    await Trivia.create({ contentId: inception.id, triviaText: "Christopher Nolan je pisao scenario 10 godina." });
-
-    app.listen(PORT, () => {
-      console.log(`🚀 Server radi na http://localhost:${PORT}`);
-    });
-  } catch (err) {
-    console.error("❌ Greška prilikom pokretanja servera:", err);
-  }
+// --- In-memory baza ---
+interface Content {
+  id: number;
+  title: string;
+  description: string;
+  category: "film" | "serija";
+  averageRating: number;
+  ratings: number[];
 }
 
-startServer();
+const contents: Content[] = [
+  { id: 1, title: "Inception", description: "Sci-fi film", category: "film", averageRating: 9, ratings: [9] },
+  { id: 2, title: "Stranger Things", description: "Serija", category: "serija", averageRating: 8, ratings: [8] },
+  { id: 3, title: "Interstellar", description: "Sci-fi film", category: "film", averageRating: 9, ratings: [9] },
+];
+
+// --- GET svi sadržaji sa filterom i sortiranjem ---
+app.get("/api/content", (req, res) => {
+  const { category = "all", sortBy = "title", order = "asc" } = req.query;
+
+  let filtered = contents;
+
+  if (category !== "all") {
+    filtered = filtered.filter(c => c.category === category);
+  }
+
+  filtered.sort((a, b) => {
+    let valA: any = a[sortBy as keyof Content];
+    let valB: any = b[sortBy as keyof Content];
+
+    if (typeof valA === "string") valA = valA.toLowerCase();
+    if (typeof valB === "string") valB = valB.toLowerCase();
+
+    if (valA < valB) return order === "asc" ? -1 : 1;
+    if (valA > valB) return order === "asc" ? 1 : -1;
+    return 0;
+  });
+
+  res.json(filtered);
+});
+
+// --- POST ocena ---
+app.post("/api/content/:id/rate", (req, res) => {
+  const contentId = Number(req.params.id);
+  const { ratingValue, userId } = req.body;
+
+  if (!ratingValue || ratingValue < 1 || ratingValue > 10) {
+    return res.status(400).json({ message: "Nevažeća ocena" });
+  }
+
+  const content = contents.find(c => c.id === contentId);
+  if (!content) return res.status(404).json({ message: "Sadržaj nije pronađen" });
+
+  content.ratings.push(ratingValue);
+  content.averageRating = content.ratings.reduce((a, b) => a + b, 0) / content.ratings.length;
+
+  res.json({ message: "Ocena je uspešno sačuvana", averageRating: content.averageRating });
+});
+
+app.listen(PORT, () => {
+  console.log(`🚀 Server radi na http://localhost:${PORT}`);
+});

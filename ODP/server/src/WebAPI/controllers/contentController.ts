@@ -1,39 +1,37 @@
-import { Router } from "express";
-import { ContentService } from "../../Services/content/contentService";
+import { Request, Response } from "express";
+import * as ContentRepository from "../../Database/repositories/content/ContentRepository";
 
-export const contentRouter = Router();
-
-// GET /api/contents
-contentRouter.get("/", async (req, res) => {
+export async function getAllContent(req: Request, res: Response) {
   try {
-    const contents = await ContentService.getAllContents();
-    res.json(contents);
+    const content = await ContentRepository.getAllContent();
+    res.json(content);
   } catch (err) {
-    res.status(500).json({ error: err });
+    console.error(err);
+    res.status(500).json({ error: "Greška pri dohvatanju sadržaja." });
   }
-});
+}
 
-// GET /api/contents/:id
-contentRouter.get("/:id", async (req, res) => {
+export async function getContentById(req: Request, res: Response) {
   try {
     const id = parseInt(req.params.id);
-    const content = await ContentService.getContentById(id);
-    const avgRating = await ContentService.getAverageRating(id);
-    const trivias = await ContentService.getTrivia(id);
-    res.json({ content, avgRating, trivias });
+    const content = await ContentRepository.getContentById(id);
+    if (!content) {
+      return res.status(404).json({ message: "Sadržaj nije pronađen." });
+    }
+    res.json(content);
   } catch (err) {
-    res.status(404).json({ error: err });
+    console.error(err);
+    res.status(500).json({ error: "Greška pri dohvatanju sadržaja." });
   }
-});
+}
 
-// POST /api/contents/:id/rating
-contentRouter.post("/:id/rating", async (req, res) => {
+export async function createContent(req: Request, res: Response) {
   try {
-    const contentId = parseInt(req.params.id);
-    const { userId, ratingValue } = req.body;
-    const rating = await ContentService.addRating(userId, contentId, ratingValue);
-    res.json(rating);
+    const { title, description, type } = req.body;
+    const result = await ContentRepository.createContent(title, description, type);
+    res.status(201).json({ message: "Sadržaj kreiran", result });
   } catch (err) {
-    res.status(500).json({ error: err });
+    console.error(err);
+    res.status(500).json({ error: "Greška pri kreiranju sadržaja." });
   }
-});
+}

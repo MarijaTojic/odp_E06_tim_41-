@@ -41,7 +41,7 @@ function App() {
         />
 
         {/* Preusmerava na dashboard kao default rutu */}
-        <Route path="/" element={<Navigate to="/register" replace />} />
+        <Route path="/" element={<Navigate to="//content/:id" replace />} />
 
         {/* Catch-all ruta za nepostojeće stranice */}
         <Route path="*" element={<Navigate to="/404" replace />} />

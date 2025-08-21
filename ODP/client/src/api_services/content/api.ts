@@ -1,27 +1,30 @@
-import axios from "axios";
+export interface Content {
+  id: number;
+  title: string;
+  description: string;
+  category: "film" | "serija";
+  averageRating: number;
+}
 
-const api = axios.create({
-  baseURL: "http://localhost:3000/api", // tvoj backend
-});
+export const API_URL = "http://localhost:5000/api/content";
 
-// Content API
-export const getContents = async () => {
-  const res = await api.get("/content");
-  return res.data;
-};
+export async function getAllContent(
+  sortBy: "title" | "averageRating" = "title",
+  order: "asc" | "desc" = "asc",
+  category: "all" | "film" | "serija" = "all"
+): Promise<Content[]> {
+  const params = new URLSearchParams({ sortBy, order, category });
+  const res = await fetch(`${API_URL}?${params.toString()}`);
+  if (!res.ok) throw new Error("Greška pri dohvatanju sadržaja");
+  const data: Content[] = await res.json();
+  return data;
+}
 
-export const getContentById = async (id: number) => {
-  const res = await api.get(`/content/${id}`);
-  return res.data;
-};
-
-export const createContent = async (data: any) => {
-  const res = await api.post("/content", data);
-  return res.data;
-};
-
-// Rating API
-export const addRating = async (contentId: number, userId: number, ratingValue: number) => {
-  const res = await api.post("/rating", { contentId, userId, ratingValue });
-  return res.data;
-};
+export async function rateContent(contentId: number, userId: number, ratingValue: number): Promise<void> {
+  const res = await fetch(`${API_URL}/${contentId}/rate`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ ratingValue, userId }),
+  });
+  if (!res.ok) throw new Error("Greška pri slanju ocene");
+}
