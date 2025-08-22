@@ -1,16 +1,10 @@
 export class Trivia {
-  static findByPk(triviaId: number) {
-      throw new Error("Method not implemented.");
-  }
-  static findAll(arg0: { where: { contentId: number; }; }) {
-    throw new Error("Method not implemented.");
-  }
-  static create(arg0: { triviaText: string; contentId: any; }) {
-    throw new Error("Method not implemented.");
-  }
+  id: any;
+  contentId: any;
+  triviaText: any;
   public constructor(
-  id: number,
-  contentId: number,
-  triviaText: string
+  id?: number,
+  contentId?: number,
+  triviaText?: string
   ) {}
 }

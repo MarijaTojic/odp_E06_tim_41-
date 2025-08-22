@@ -1,19 +1,21 @@
+import { RatingDto } from "../../Domain/DTOs/rating/RatingDto";
 import { Rating } from "../../Domain/models/Rating";
+import { IRatingRepository } from "../../Domain/repositories/users/IRatingRepository";
+import { IRatingService } from "../../Domain/services/rating/IRating";
 
-export class RatingService {
-
-  // Dodavanje ocene
-  static async addRating(userId: number, contentId: number, ratingValue: number) {
-    return await Rating.create({ userId, contentId, ratingValue });
+export class RatingService implements IRatingService{
+   public constructor(private ratingRepository: IRatingRepository) {}
+  
+  async getAll(): Promise<RatingDto[]> {
+        const rating: Rating[] = await this.ratingRepository.getAll();
+        const ratingDto: RatingDto[] = rating.map(
+         (rating) => new RatingDto(rating.id, rating.userId, rating.contentId, rating.ratingValue)
+       );
+   
+       return ratingDto;
   }
 
-  // Dohvat ocene po ID
-  static async getRatingById(ratingId: number) {
-    const rating = await Rating.findByPk(ratingId);
-    if (!Rating) throw new Error("Rating not found");
-    return rating;
-  }
+     
 
-
-  }
+}
 

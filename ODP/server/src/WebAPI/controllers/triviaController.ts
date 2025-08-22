@@ -1,22 +1,34 @@
-import { Request, Response } from "express";
+import { Request, Response, Router } from "express";
 import * as TriviaRepository from "../../Database/repositories/trivia/TriviaRepository";
+import { ITriviaService } from "../../Domain/services/trivia/ITrivia";
+import { ITriviaRepository } from "../../Domain/repositories/users/ITriviaRepository";
 
-export async function getTriviaByContent(req: Request, res: Response) {
+export class TriviaController {
+  private router: Router;
+  private triviaService: ITriviaService;
+
+  public constructor(private triviaRepository: ITriviaRepository, triviaService: ITriviaService) {
+    this.router = Router();
+    this.triviaService = triviaService;
+    this.initializeRoutes();
+
+  }
+
+   private initializeRoutes(): void {
+    this.router.post('/auth/getTriviaByContent', this.getTriviaByContent.bind(this));
+    
+   
+  }
+
+private async  getTriviaByContent(req: Request, res: Response) {
   try {
-    const contentId = parseInt(req.params.contentId);
-    const trivia = await TriviaRepository.getTriviaByContent(contentId);
+    const contentId = (req.params.contentId);
+    const trivia = await this.triviaRepository.getByUsername(contentId);
     res.json(trivia);
   } catch (err) {
     res.status(500).json({ error: "Greška pri dohvatanju trivije." });
   }
 }
 
-export async function addTrivia(req: Request, res: Response) {
-  try {
-    const { contentId, text } = req.body;
-    const result = await TriviaRepository.addTrivia(contentId, text);
-    res.status(201).json({ message: "Trivija dodata", result });
-  } catch (err) {
-    res.status(500).json({ error: "Greška pri dodavanju trivije." });
-  }
+
 }

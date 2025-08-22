@@ -1,23 +1,22 @@
+import { TriviaDto } from "../../Domain/DTOs/trivia/TriviaDto";
 import { Trivia } from "../../Domain/models/Trivia";
+import { ITriviaService } from "../../Domain/services/trivia/ITrivia";
+import { ITriviaRepository } from "../../Domain/repositories/users/ITriviaRepository";
 
-export class TriviaService {
-  static getAllTrivia() {
-      throw new Error("Method not implemented.");
+
+export class TriviaService implements ITriviaService {
+   public constructor(private triviaRepository: ITriviaRepository) {}
+
+  async getAllTrivia(): Promise<TriviaDto[]> {
+     const trivia: Trivia[] = await this.triviaRepository.getAll();
+     const triviaDto: TriviaDto[] = trivia.map(
+      (trivia) => new TriviaDto(trivia.id, trivia.contentId, trivia.triviaText)
+    );
+
+    return triviaDto;
   }
+   
 
-  // Dodavanje trivije
-  static async addTrivia(contentId: number, triviaText: string) {
-    return await Trivia.create({ contentId, triviaText });
-  }
-
-
-  // Dohvat trivije po ID
-  static async getTriviaById(triviaId: number) {
-    const trivia = await Trivia.findByPk(triviaId);
-    if (!Trivia) throw new Error("Trivia not found");
-    return trivia;
-  }
-
-
+  
   }
 
