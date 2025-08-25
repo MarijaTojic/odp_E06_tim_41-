@@ -1,34 +1,18 @@
-import { useState } from "react";
-import { rateContent } from "../../api_services/content/api";
-
-interface RatingStarsProps {
-  contentId: number;
-  userId: number;
-  onRated?: () => void;
+interface RatingProps {
+  currentRating: number;
+  onRate: (rating: number) => void;
 }
 
-export default function RatingStars({ contentId, userId, onRated }: RatingStarsProps) {
-  const [selectedRating, setSelectedRating] = useState<number>(0);
-
-  const handleRate = async (value: number) => {
-    setSelectedRating(value);
-    try {
-      await rateContent(contentId, userId, value);
-      if (onRated) onRated();
-      alert(`Hvala! Ocena: ${value}`);
-    } catch (err) {
-      console.error(err);
-      alert("Greška pri ocenjivanju");
-    }
-  };
-
+export function Rating({ currentRating, onRate }: RatingProps) {
   return (
     <div className="flex gap-1">
-      {Array.from({ length: 10 }, (_, i) => i + 1).map(num => (
+      {Array.from({ length: 10 }, (_, i) => i + 1).map((num) => (
         <button
           key={num}
-          onClick={() => handleRate(num)}
-          className={`px-2 py-1 border rounded ${selectedRating >= num ? "bg-yellow-400" : ""}`}
+          onClick={() => onRate(num)}
+          className={`px-2 py-1 rounded ${
+            num <= currentRating ? "bg-yellow-400 text-white" : "bg-gray-300 text-gray-700"
+          } hover:bg-yellow-500 transition`}
         >
           {num}
         </button>

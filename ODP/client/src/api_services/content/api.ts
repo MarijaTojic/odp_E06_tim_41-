@@ -1,30 +1,80 @@
-export interface Content {
-  id: number;
-  title: string;
-  description: string;
-  category: "film" | "serija";
-  averageRating: number;
-}
+import type { Content } from "../../models/content/Content";
+import type { Iapi } from "./Iapi";
 
-export const API_URL = "http://localhost:5000/api/content";
+const API_URL: string = import.meta.env.VITE_API_URL + "auth";
 
-export async function getAllContent(
-  sortBy: "title" | "averageRating" = "title",
-  order: "asc" | "desc" = "asc",
-  category: "all" | "film" | "serija" = "all"
-): Promise<Content[]> {
-  const params = new URLSearchParams({ sortBy, order, category });
-  const res = await fetch(`${API_URL}?${params.toString()}`);
-  if (!res.ok) throw new Error("Greška pri dohvatanju sadržaja");
-  const data: Content[] = await res.json();
-  return data;
-}
+export const api: Iapi = {
+  async getAllContent(title: string, category: string): Promise<Content[]> {
+    const params = new URLSearchParams({ title, category });
+    const res = await fetch(`${API_URL}?${params.toString()}`);
+    if (!res.ok) throw new Error("Greška pri dohvatanju sadržaja");
+    const data: Content[] = await res.json();
+    return data;
+  },
 
-export async function rateContent(contentId: number, userId: number, ratingValue: number): Promise<void> {
-  const res = await fetch(`${API_URL}/${contentId}/rate`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ ratingValue, userId }),
-  });
-  if (!res.ok) throw new Error("Greška pri slanju ocene");
-}
+  async fetchContent(): Promise<Content[]> {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve([
+          {
+            id: 1,
+            title: "Inception",
+            genre: "Sci-Fi",
+            type: "Film",
+            prosecnaOcena: 4.8,
+            imageURL: "https://via.placeholder.com/200x300?text=Inception",
+            description: "",
+            trivia: "",
+            category: "film",
+          },
+          {
+            id: 2,
+            title: "Breaking Bad",
+            genre: "Drama",
+            type: "Serija",
+            prosecnaOcena: 4.9,
+            imageURL: "https://via.placeholder.com/200x300?text=Breaking+Bad",
+            description: "",
+            trivia: "",
+            category: "serija",
+            episodes: [], // može biti prazno
+          },
+          {
+            id: 3,
+            title: "The Witcher",
+            genre: "Fantasy",
+            type: "Serija",
+            prosecnaOcena: 4.5,
+            imageURL: "https://via.placeholder.com/200x300?text=The+Witcher",
+            description: "",
+            trivia: "",
+            category: "serija",
+            episodes: [],
+          },
+        ]);
+      }, 500);
+    });
+  },
+
+  async addContent(newContent: Omit<Content, "id" | "prosecnaOcena">): Promise<Content> {
+    const res = await fetch("/api/content", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(newContent),
+    });
+
+    if (!res.ok) throw new Error("Neuspešno dodavanje sadržaja");
+    return res.json();
+  },
+
+  async rateContent(contentId: number, rating: number): Promise<Content> {
+    const res = await fetch(`/api/content/${contentId}/rate`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ rating }),
+    });
+
+    if (!res.ok) throw new Error("Neuspešno ocenjivanje sadržaja");
+    return res.json();
+  },
+};

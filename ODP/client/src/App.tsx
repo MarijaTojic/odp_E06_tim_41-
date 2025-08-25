@@ -7,46 +7,46 @@ import { authApi } from "./api_services/auth/AuthAPIService";
 import { ProtectedRoute } from "./components/protected_route/ProtectedRoute";
 //import PrijavaStranica from "./pages/auth/PrijavaStranica";
 import RegistracijaStranica from "./pages/auth/RegistracijaStranica";
-import KontrolnaTablaUserStranica from "./pages/kontrolna_tabla/KontrolnaTablaUserStranica";
+//import KontrolnaTablaUserStranica from "./pages/kontrolna_tabla/KontrolnaTablaUserStranica";
 import KontrolnaTablaAdminStranica from "./pages/kontrolna_tabla/KontrolnaTablaAdminStranica";
 import NotFoundStranica from "./pages/not_found/NotFoundPage";
-import { usersApi } from "./api_services/users/UsersAPIService";
-import ContentPage from "./pages/ContentPage";
+//import { usersApi } from "./api_services/users/UsersAPIService";
+import CatalogPage from "./pages/ContentPage";
+
 
 function App() {
   return (
-    <Routes>
-      
+   <Routes>
      
       <Route path="/register" element={<RegistracijaStranica authApi={authApi} />} />
-       <Route path="/content/:id" element={<ContentPage />}  />
       <Route path="/404" element={<NotFoundStranica />} />
 
-        <Route
-          path="/user-dashboard"
-          element={
-            <ProtectedRoute requiredRole="user">
-              <KontrolnaTablaUserStranica />
-            </ProtectedRoute>
-          }
-        />
+      {/* User dashboard */}
+      <Route
+        path="/user-dashboard"
+        element={
+          <ProtectedRoute requiredRole="user">
+            <CatalogPage />
+          </ProtectedRoute>
+        }
+      />
 
-        <Route
-          path="/admin-dashboard"
-          element={
-            <ProtectedRoute requiredRole="admin">
-              <KontrolnaTablaAdminStranica usersApi={usersApi} /> 
-            </ProtectedRoute>
-          }
-        />
+      {/* Admin dashboard */}
+      <Route
+        path="/admin-dashboard"
+        element={
+          <ProtectedRoute requiredRole="admin">
+            <KontrolnaTablaAdminStranica />
+          </ProtectedRoute>
+        }
+      />
 
-        {/* Preusmerava na dashboard kao default rutu */}
-        <Route path="/" element={<Navigate to="//content/:id" replace />} />
-
-        {/* Catch-all ruta za nepostojeće stranice */}
-        <Route path="*" element={<Navigate to="/404" replace />} />
+      {/* Default ruta */}
+      <Route path="/" element={<Navigate to="/register" replace />} />
+      <Route path="*" element={<Navigate to="/404" replace />} />
     </Routes>
   );
+  
 }
 
 export default App;
