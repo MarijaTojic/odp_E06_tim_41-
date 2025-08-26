@@ -1,5 +1,4 @@
-// src/models/content/Content.ts
-import type { Episode } from "./Episode";
+
 
 export interface Content {
   id: number;                // Jedinstveni ID sadržaja
@@ -13,3 +12,12 @@ export interface Content {
   episodes?: Episode[];     // Lista epizoda (samo za serije)
   category: string;
 }
+
+export interface Episode {
+  season: number;       // Broj sezone
+  episode: number;      // Broj epizode
+  title: string;        // Naziv epizode
+  description: string;  // Kratak opis epizode
+  coverURL: string;     // URL cover slike epizode
+}
+

@@ -1,5 +1,6 @@
-export interface UserDto {
-    id: number;
-    korisnickoIme: string;
-    uloga: string;
+
+export interface User {
+  id: number;
+  username: string;
+  uloga: "user" | "admin";
 }

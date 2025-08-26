@@ -1,9 +1,10 @@
-import type { AuthResponse } from "../../types/auth/AuthResponse";
+import type { User } from "../../models/users/UserDto";
+
 
 /**
  * Interfejs za Auth API servis.
  */
 export interface IAuthAPIService {
-  prijava(korisnickoIme: string, lozinka: string): Promise<AuthResponse>;
-  registracija(korisnickoIme: string, lozinka: string, uloga: string): Promise<AuthResponse>;
+    register(username: any, password: any, uloga: any) : Promise<User[]>;
+
 }

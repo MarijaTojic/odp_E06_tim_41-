@@ -1,7 +1,7 @@
-import type { UserDto } from "../../models/users/UserDto";
+import type { User } from "../../models/users/UserDto";
 
 export type AuthResponse = {
   success: boolean;
   message: string;
-  data?: UserDto;
+  data?: User;
 }
