@@ -1,298 +1,261 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../contexts/auth/AuthContext";
+import { useNavigate } from "react-router-dom";
 
-interface Episode {
-  season: number;
-  episode: number;
-  title: string;
-}
-
-interface Content {
+export interface Content {
   id: number;
   title: string;
   genre: string;
   type: string;
-  category: "film" | "serija";
   prosecnaOcena: number;
   imageURL: string;
-  description?: string;
-  episodes?: Episode[];
 }
 
+const mockContent: Content[] = [
+  { id: 1, title: "Inception", genre: "Sci-Fi", type: "Film", prosecnaOcena: 4.8, imageURL: "https://via.placeholder.com/300x400?text=Inception" },
+  { id: 2, title: "Breaking Bad", genre: "Drama", type: "Serija", prosecnaOcena: 4.9, imageURL: "https://via.placeholder.com/300x400?text=Breaking+Bad" },
+  { id: 3, title: "The Witcher", genre: "Fantasy", type: "Serija", prosecnaOcena: 4.5, imageURL: "https://via.placeholder.com/300x400?text=The+Witcher" },
+  { id: 4, title: "Interstellar", genre: "Sci-Fi", type: "Film", prosecnaOcena: 4.7, imageURL: "https://via.placeholder.com/300x400?text=Interstellar" },
+  { id: 5, title: "Stranger Things", genre: "Horror/Drama", type: "Serija", prosecnaOcena: 4.6, imageURL: "https://via.placeholder.com/300x400?text=Stranger+Things" },
+  { id: 6, title: "The Dark Knight", genre: "Action", type: "Film", prosecnaOcena: 4.9, imageURL: "https://via.placeholder.com/300x400?text=Dark+Knight" },
+  { id: 7, title: "Friends", genre: "Comedy", type: "Serija", prosecnaOcena: 4.4, imageURL: "https://via.placeholder.com/300x400?text=Friends" },
+  { id: 8, title: "Avatar", genre: "Sci-Fi", type: "Film", prosecnaOcena: 4.3, imageURL: "https://via.placeholder.com/300x400?text=Avatar" },
+];
+
 export default function CatalogPage() {
-  const { user } = useAuth();
+  const { user} = useAuth();
+  const navigate = useNavigate();
 
-  // Glavni podaci
   const [items, setItems] = useState<Content[]>([]);
-  const [categoryFilter, setCategoryFilter] = useState<"film" | "serija" | "all">("all");
-  const [sortField, setSortField] = useState<"title" | "prosecnaOcena">("title");
-  const [sortAsc, setSortAsc] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState<"all" | "film" | "serija">("all");
+  const [sort, setSort] = useState<"title-asc" | "title-desc" | "rating-asc" | "rating-desc">("title-asc");
 
-  // Modal za admin dodavanje sadržaja
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [newContent, setNewContent] = useState<Partial<Content>>({
-    title: "",
-    genre: "",
-    type: "Film",
-    category: "film",
-    imageURL: "",
-    description: "",
-    episodes: [],
-  });
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalContent, setModalContent] = useState<Content | null>(null);
+  const [rating, setRating] = useState(1);
+  const [newContent, setNewContent] = useState<Partial<Content>>({});
 
-  const [newEpisode, setNewEpisode] = useState<Partial<Episode>>({ season: 1, episode: 1, title: "" });
-
-  // Fetch sadržaja (simulacija)
   useEffect(() => {
-    const fetchContent = async () => {
-      const data: Content[] = [
-        {
-          id: 1,
-          title: "Inception",
-          genre: "Sci-Fi",
-          type: "Film",
-          category: "film",
-          prosecnaOcena: 4.8,
-          imageURL: "https://via.placeholder.com/200x300?text=Inception",
-        },
-        {
-          id: 2,
-          title: "Breaking Bad",
-          genre: "Drama",
-          type: "Serija",
-          category: "serija",
-          prosecnaOcena: 4.9,
-          imageURL: "https://via.placeholder.com/200x300?text=Breaking+Bad",
-          episodes: [
-            { season: 1, episode: 1, title: "Pilot" },
-            { season: 1, episode: 2, title: "Cat's in the Bag..." },
-          ],
-        },
-      ];
-      setItems(data);
-    };
-    fetchContent();
+    setTimeout(() => {
+      setItems(mockContent);
+      setLoading(false);
+    }, 500);
   }, []);
 
-  if (!user) return <p>Učitavanje korisnika...</p>;
+  const handleLogout = () => {
+    navigate("/register");
+  };
 
-  // Filtriranje i sortiranje
   const filteredItems = items
-    .filter((c) => categoryFilter === "all" || c.category === categoryFilter)
-    .filter((c) => c.title.toLowerCase().includes(searchTerm.toLowerCase()))
+    .filter((item) => filter === "all" || item.type.toLowerCase() === filter)
     .sort((a, b) => {
-      if (sortField === "title") return sortAsc ? a.title.localeCompare(b.title) : b.title.localeCompare(a.title);
-      else return sortAsc ? a.prosecnaOcena - b.prosecnaOcena : b.prosecnaOcena - a.prosecnaOcena;
+      if (sort.startsWith("title")) {
+        return sort === "title-asc" ? a.title.localeCompare(b.title) : b.title.localeCompare(a.title);
+      } else {
+        return sort === "rating-asc" ? a.prosecnaOcena - b.prosecnaOcena : b.prosecnaOcena - a.prosecnaOcena;
+      }
     });
 
-  // Ocenjivanje sadržaja (user)
-  const rateContent = (id: number, rating: number) => {
-    setItems((prev) =>
-      prev.map((c) => (c.id === id ? { ...c, prosecnaOcena: rating } : c))
-    );
+  const openModal = (item?: Content) => {
+    setModalContent(item || null);
+    setRating(1);
+    setNewContent(item ? { ...item } : {});
+    setModalOpen(true);
   };
 
-  // Dodavanje nove epizode u modal
-  const addEpisode = () => {
-    if (!newEpisode.title) return;
-    setNewContent({
-      ...newContent,
-      episodes: [...(newContent.episodes || []), newEpisode as Episode],
-    });
-    setNewEpisode({ season: 1, episode: (newEpisode.episode || 0) + 1, title: "" });
+  const closeModal = () => setModalOpen(false);
+
+  const submitRating = () => {
+    if (modalContent) {
+      const updated = items.map((i) =>
+        i.id === modalContent.id ? { ...i, prosecnaOcena: rating } : i
+      );
+      setItems(updated);
+    }
+    closeModal();
   };
 
-  // Dodavanje sadržaja (admin)
-  const addContent = () => {
-    if (!newContent.title || !newContent.genre || !newContent.imageURL) return;
-    setItems([...items, { ...newContent, id: Date.now(), type: newContent.type!, prosecnaOcena: 0 } as Content]);
-    setNewContent({ title: "", genre: "", type: "Film", category: "film", imageURL: "", description: "", episodes: [] });
-    setIsModalOpen(false);
+  const submitNewContent = () => {
+    if (newContent.title && newContent.genre && newContent.type && newContent.imageURL) {
+      if (modalContent) {
+        setItems(items.map(i => i.id === modalContent.id ? {...i, ...newContent} as Content : i));
+      } else {
+        const nextId = Math.max(...items.map(i => i.id)) + 1;
+        setItems([...items, { ...newContent, id: nextId, prosecnaOcena: 0 } as Content]);
+      }
+      closeModal();
+    } else {
+      alert("Popunite sva polja");
+    }
   };
+
+  if (loading) return <div className="p-10 text-center text-xl font-medium">Učitavanje...</div>;
 
   return (
-    <div className="p-8 bg-gray-100 min-h-screen">
-      <h1 className="text-4xl font-bold mb-4 text-center text-gray-800">Katalog</h1>
-      <p className="text-center mb-6">Dobrodošli, <span className="font-semibold">{user.username}</span>! Uloga: <span className="font-semibold">{user.uloga}</span></p>
+    <div className="min-h-screen bg-gradient-to-tr from-purple-100 via-pink-100 to-orange-100 p-6">
+      <div className="flex flex-col sm:flex-row justify-between items-center mb-8">
+        <h1 className="text-4xl font-extrabold text-purple-800 mb-4 sm:mb-0">🎬 KATALOG</h1>
+        <div className="flex items-center space-x-4">
+          <span className="text-lg font-medium text-purple-700">Uloga: {user?.uloga}</span>
+          <button
+            onClick={handleLogout}
+            className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-xl shadow-lg transition transform hover:scale-105"
+          >
+            Odjavi se
+          </button>
+        </div>
+      </div>
 
-      <div className="flex flex-wrap gap-4 justify-center mb-6">
-        <input
-          type="text"
-          placeholder="Pretraga..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
-
+      <div className="flex flex-col sm:flex-row justify-between items-center mb-6 space-y-2 sm:space-y-0 sm:space-x-4">
         <select
-          value={categoryFilter}
-          onChange={(e) => setCategoryFilter(e.target.value as any)}
-          className="px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          value={filter}
+          onChange={(e) => setFilter(e.target.value as "all" | "film" | "serija")}
+          className="px-4 py-2 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-400 bg-purple-50"
         >
-          <option value="all">Sve</option>
+          <option value="all">Sve kategorije</option>
           <option value="film">Film</option>
           <option value="serija">Serija</option>
         </select>
 
         <select
-          value={sortField}
-          onChange={(e) => setSortField(e.target.value as any)}
-          className="px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          value={sort}
+          onChange={(e) => setSort(e.target.value as typeof sort)}
+          className="px-4 py-2 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-400 bg-purple-50"
         >
-          <option value="title">Naziv</option>
-          <option value="prosecnaOcena">Prosečna ocena</option>
+          <option value="title-asc">Naziv A-Z</option>
+          <option value="title-desc">Naziv Z-A</option>
+          <option value="rating-asc">Ocena rastuće</option>
+          <option value="rating-desc">Ocena opadajuće</option>
         </select>
 
-        <button
-          onClick={() => setSortAsc(!sortAsc)}
-          className="px-3 py-2 border rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition"
-        >
-          {sortAsc ? "Rastuće" : "Opadajuće"}
-        </button>
-
-        {user.uloga === "admin" && (
+        {user?.uloga === "admin" && (
           <button
-            onClick={() => setIsModalOpen(true)}
-            className="px-3 py-2 border rounded-lg bg-green-500 text-white hover:bg-green-600 transition"
+            onClick={() => openModal()}
+            className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-xl shadow-lg transition transform hover:scale-105"
           >
-            Dodaj sadržaj
+            Dodaj novi sadržaj
           </button>
         )}
       </div>
 
-      {/* Kartice */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredItems.map((c) => (
-          <div key={c.id} className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition">
-            <img src={c.imageURL} alt={c.title} className="w-full h-60 object-cover" />
-            <div className="p-4">
-              <h2 className="font-bold text-xl mb-1">{c.title}</h2>
-              <p className="text-gray-600 mb-1">{c.genre}</p>
-              <p className="font-medium mb-2">Ocena: {c.prosecnaOcena}</p>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+        {filteredItems.map((item) => (
+          <div key={item.id} className="bg-white rounded-2xl shadow-xl overflow-hidden transform transition hover:scale-105 hover:shadow-2xl">
+            <img src={item.imageURL} alt={item.title} className="w-full h-64 object-cover" />
+            <div className="p-4 bg-gradient-to-t from-white/80 via-white/60 to-white/40">
+              <h2 className="text-xl font-bold text-purple-800 mb-1">{item.title}</h2>
+              <p className="text-gray-500 mb-2">{item.genre} | {item.type}</p>
+              <p className="text-yellow-600 font-semibold mb-3">Ocena: {item.prosecnaOcena.toFixed(1)}</p>
 
-              {user.uloga === "user" && (
-                <div className="flex flex-wrap gap-1">
-                  {[1,2,3,4,5,6,7,8,9,10].map(n => (
-                    <button
-                      key={n}
-                      onClick={() => rateContent(c.id, n)}
-                      className="px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
-                    >
-                      {n}
-                    </button>
-                  ))}
-                </div>
+              {user?.uloga === "user" && (
+                <button
+                  onClick={() => openModal(item)}
+                  className="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 rounded-xl transition transform hover:scale-105"
+                >
+                  Ocenite
+                </button>
               )}
 
-              {c.episodes && c.episodes.length > 0 && (
-                <div className="mt-2">
-                  <h3 className="font-semibold mb-1">Epizode:</h3>
-                  <ul className="list-disc list-inside text-gray-700 text-sm">
-                    {c.episodes.map((ep, idx) => (
-                      <li key={idx}>S{ep.season}E{ep.episode}: {ep.title}</li>
-                    ))}
-                  </ul>
-                </div>
+              {user?.uloga === "admin" && (
+                <button
+                  onClick={() => openModal(item)}
+                  className="w-full bg-green-500 hover:bg-green-600 text-white py-2 rounded-xl transition transform hover:scale-105"
+                >
+                  Uredi
+                </button>
               )}
             </div>
           </div>
         ))}
       </div>
 
-      {/* Modal za admin */}
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-xl w-full max-w-md shadow-lg overflow-y-auto max-h-[90vh]">
-            <h2 className="text-xl font-bold mb-4">Dodaj novi sadržaj</h2>
+      {/* Modal ovde ostaje isto, sa rating ili dodavanje sadržaja */}
+      {/* Modal */}
+{modalOpen && (
+  <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/40 backdrop-blur-sm">
+    <div className="bg-white rounded-3xl shadow-2xl p-6 w-11/12 max-w-lg relative animate-fadeIn">
+      <button
+        onClick={closeModal}
+        className="absolute top-4 right-4 text-gray-500 hover:text-gray-800 text-2xl font-bold transition"
+      >
+        &times;
+      </button>
 
-            <input
-              type="text"
-              placeholder="Naziv"
-              className="w-full mb-2 px-3 py-2 border rounded"
-              value={newContent.title}
-              onChange={(e) => setNewContent({ ...newContent, title: e.target.value })}
-            />
-            <input
-              type="text"
-              placeholder="Žanr"
-              className="w-full mb-2 px-3 py-2 border rounded"
-              value={newContent.genre}
-              onChange={(e) => setNewContent({ ...newContent, genre: e.target.value })}
-            />
-            <select
-              value={newContent.category}
-              onChange={(e) => setNewContent({ ...newContent, category: e.target.value as "film" | "serija" })}
-              className="w-full mb-2 px-3 py-2 border rounded"
+      {modalContent && user?.uloga === "user" ? (
+        <>
+          <h2 className="text-2xl font-bold text-purple-700 mb-4 text-center">
+            Ocenite: {modalContent.title}
+          </h2>
+          <input
+            type="number"
+            min={1}
+            max={10}
+            value={rating}
+            onChange={(e) => setRating(Number(e.target.value))}
+            className="w-full px-4 py-2 mb-4 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-400 text-center text-lg font-semibold"
+          />
+          <button
+            onClick={submitRating}
+            className="w-full bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 text-white py-2 rounded-xl shadow-lg hover:scale-105 transition transform font-bold"
+          >
+            Pošalji ocenu
+          </button>
+        </>
+      ) : (
+        <>
+          <h2 className="text-2xl font-bold text-green-700 mb-4 text-center">
+            {modalContent ? "Uredi sadržaj" : "Dodaj novi sadržaj"}
+          </h2>
+          <input
+            type="text"
+            placeholder="Naziv"
+            value={newContent.title || ""}
+            onChange={(e) => setNewContent({ ...newContent, title: e.target.value })}
+            className="w-full px-4 py-2 rounded-xl border border-gray-300 mb-2 focus:outline-none focus:ring-2 focus:ring-green-400"
+          />
+          <input
+            type="text"
+            placeholder="Žanr"
+            value={newContent.genre || ""}
+            onChange={(e) => setNewContent({ ...newContent, genre: e.target.value })}
+            className="w-full px-4 py-2 rounded-xl border border-gray-300 mb-2 focus:outline-none focus:ring-2 focus:ring-green-400"
+          />
+          <input
+            type="text"
+            placeholder="Tip (Film/Serija)"
+            value={newContent.type || ""}
+            onChange={(e) => setNewContent({ ...newContent, type: e.target.value })}
+            className="w-full px-4 py-2 rounded-xl border border-gray-300 mb-2 focus:outline-none focus:ring-2 focus:ring-green-400"
+          />
+          <input
+            type="text"
+            placeholder="URL slike"
+            value={newContent.imageURL || ""}
+            onChange={(e) => setNewContent({ ...newContent, imageURL: e.target.value })}
+            className="w-full px-4 py-2 rounded-xl border border-gray-300 mb-4 focus:outline-none focus:ring-2 focus:ring-green-400"
+          />
+
+          <div className="flex justify-end space-x-2">
+            <button
+              onClick={closeModal}
+              className="px-4 py-2 rounded-xl bg-gray-300 hover:bg-gray-400 transition font-semibold"
             >
-              <option value="film">Film</option>
-              <option value="serija">Serija</option>
-            </select>
-            <input
-              type="text"
-              placeholder="URL slike"
-              className="w-full mb-2 px-3 py-2 border rounded"
-              value={newContent.imageURL}
-              onChange={(e) => setNewContent({ ...newContent, imageURL: e.target.value })}
-            />
-            <textarea
-              placeholder="Opis"
-              className="w-full mb-2 px-3 py-2 border rounded"
-              value={newContent.description}
-              onChange={(e) => setNewContent({ ...newContent, description: e.target.value })}
-            />
-
-            {/* Dodavanje epizoda za serije */}
-            {newContent.category === "serija" && (
-              <div className="mb-2">
-                <h3 className="font-semibold mb-1">Dodaj epizodu</h3>
-                <input
-                  type="number"
-                  placeholder="Sezona"
-                  className="w-1/3 mb-1 px-2 py-1 border rounded"
-                  value={newEpisode.season}
-                  onChange={(e) => setNewEpisode({ ...newEpisode, season: Number(e.target.value) })}
-                />
-                <input
-                  type="number"
-                  placeholder="Epizoda"
-                  className="w-1/3 mb-1 px-2 py-1 border rounded mx-1"
-                  value={newEpisode.episode}
-                  onChange={(e) => setNewEpisode({ ...newEpisode, episode: Number(e.target.value) })}
-                />
-                <input
-                  type="text"
-                  placeholder="Naziv epizode"
-                  className="w-1/3 mb-1 px-2 py-1 border rounded"
-                  value={newEpisode.title}
-                  onChange={(e) => setNewEpisode({ ...newEpisode, title: e.target.value })}
-                />
-                <button
-                  onClick={addEpisode}
-                  className="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 transition mt-1"
-                >
-                  Dodaj epizodu
-                </button>
-              </div>
-            )}
-
-            <div className="flex justify-end gap-2 mt-4">
-              <button
-                className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400 transition"
-                onClick={() => setIsModalOpen(false)}
-              >
-                Otkaži
-              </button>
-              <button
-                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
-                onClick={addContent}
-              >
-                Dodaj
-              </button>
-            </div>
+              Otkaži
+            </button>
+            <button
+              onClick={submitNewContent}
+              className="px-4 py-2 rounded-xl bg-gradient-to-r from-green-500 via-lime-400 to-green-600 text-white font-bold hover:scale-105 transition transform"
+            >
+              Sačuvaj
+            </button>
           </div>
-        </div>
+        </>
       )}
+    </div>
+  </div>
+)}
+
     </div>
   );
 }
