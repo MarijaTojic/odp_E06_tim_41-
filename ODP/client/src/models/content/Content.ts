@@ -21,3 +21,4 @@ export interface Episode {
   coverURL: string;     // URL cover slike epizode
 }
 
+
