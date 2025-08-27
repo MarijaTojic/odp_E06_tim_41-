@@ -1,11 +1,15 @@
 
-import type { Content } from "./api";
+import type { Content } from "../../models/content/Content";
+import type { ApiService } from "./api";
 
 
 
 export interface Iapi {
-    getAllContent(title: string, category: string ): Promise<Content[]>,
+    getInstance(): Promise<ApiService>,
+    getAll(): Promise<Content[]>,
     fetchContent(): Promise<Content[]>,
-    addContent(newContent: Omit<Content, "id" | "prosecnaOcena"> & { description?: string; trivia?: string; }): Promise<Content>,
-    rateContent(contentId: number, rating: number): Promise<Content>
+    add(newContent: Content): Promise<void>,
+    rateContent(contentId: number, rating: number): Promise<void>,
+    filterByCategory(category: "Film" | "Serija"): Promise<Content[]>,
+
 }

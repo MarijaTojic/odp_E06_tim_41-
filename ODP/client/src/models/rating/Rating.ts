@@ -1,4 +1,4 @@
-export class Rating {
+export interface Rating {
   id: any;
   userId:  any;
   contentId:  any;

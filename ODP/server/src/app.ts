@@ -22,7 +22,7 @@ import { ITriviaService } from './Domain/services/trivia/ITrivia';
 import { TriviaService } from './Services/trivia/TriviaService';
 import { ContentController } from './WebAPI/controllers/ContentController';
 import { RatingController } from './WebAPI/controllers/RatingController';
-import { TriviaController } from './WebAPI/controllers/triviaController';
+import { TriviaController } from '../../server/src/WebAPI/controllers/TriviaController';
 
 require('dotenv').config();
 

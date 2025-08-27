@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { PročitajVrednostPoKljuču } from "../../helpers/local_storage";
 import { useAuth } from "../../hooks/auth/useAuthHook";
-import { InformacijeOKorisniku } from "../../components/kontrolna_tabla/InformacijeOKorisniku/InformacijeOKorinisku";
+import { InformacijeOKorisniku } from "../../components/kontrolna_tabla/InformacijeOKorisniku/InformacijeOKorisniku";
 
 export default function KontrolnaTablaUserStranica() {
   const { isAuthenticated, logout } = useAuth();
