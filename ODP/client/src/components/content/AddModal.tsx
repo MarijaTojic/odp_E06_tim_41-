@@ -20,14 +20,13 @@ export interface Content {
 }
 
 interface AddModalProps {
-  modalContent?: Content | null; // Ako se uređuje
+  modalContent?: Content | null; 
   onClose: () => void;
-  onSave: (content: Content) => void; // za admina
-  onRate?: (contentId: number, rating: number) => void; // za korisnika
+  onSave: (content: Content) => void; 
   userRole: "admin" | "user";
 }
 
-export default function AddModal({ modalContent, onClose, onSave, onRate, userRole }: AddModalProps) {
+export default function AddModal({ modalContent, onClose, onSave, userRole }: AddModalProps) {
   const [newContent, setNewContent] = useState<Content>(
     modalContent
       ? { ...modalContent }
@@ -36,7 +35,20 @@ export default function AddModal({ modalContent, onClose, onSave, onRate, userRo
 
   const [rating, setRating] = useState(modalContent?.prosecnaOcena || 1);
 
-  // Dodavanje epizode
+  const handleSave = () => {
+    if (userRole === "user" && modalContent) {
+      // Ocena korisnika
+      onSave({ ...modalContent, prosecnaOcena: rating });
+    } else {
+      if (!newContent.title || !newContent.genre || !newContent.imageURL) {
+        alert("Popunite sva polja!");
+        return;
+      }
+      onSave(newContent);
+    }
+    onClose();
+  };
+
   const addEpisode = () => {
     const newEpisode: Episode = {
       season: 1,
@@ -64,22 +76,6 @@ export default function AddModal({ modalContent, onClose, onSave, onRate, userRo
     setNewContent({ ...newContent, episodes: updatedEpisodes });
   };
 
-  const handleSave = () => {
-    if (!newContent.title || !newContent.genre || !newContent.imageURL) {
-      alert("Popunite sva polja!");
-      return;
-    }
-    onSave(newContent);
-    onClose();
-  };
-
-  const handleRating = () => {
-    if (modalContent && onRate) {
-      onRate(modalContent.id!, rating);
-    }
-    onClose();
-  };
-
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/40 backdrop-blur-sm">
       <div className="bg-white rounded-3xl shadow-2xl p-4 w-11/12 max-w-md max-h-[80vh] overflow-y-auto relative">
@@ -99,16 +95,30 @@ export default function AddModal({ modalContent, onClose, onSave, onRate, userRo
               className="w-full px-4 py-2 mb-4 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-400 text-center text-lg font-semibold"
             />
             <button
-              onClick={handleRating}
+              onClick={handleSave}
               className="w-full bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 text-white py-2 rounded-xl shadow-lg hover:scale-105 transition transform font-bold"
             >
               Pošalji ocenu
             </button>
+
+            {/* Prikaz epizoda odmah */}
+            {modalContent.episodes && modalContent.episodes.length > 0 && (
+              <div className="mt-4">
+                <h3 className="font-semibold mb-2">Epizode:</h3>
+                <ul className="list-disc pl-5 space-y-1 max-h-48 overflow-y-auto">
+                  {modalContent.episodes.map((ep, idx) => (
+                    <li key={idx}>
+                      <strong>Sezona {ep.season}, Epizoda {ep.episodeNumber}:</strong> {ep.title}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </>
         ) : (
           <>
             <h2 className="text-2xl font-bold text-center mb-4">
-              {modalContent ? "Uredi sadržaj" : "Dodaj novi sadržaj"}
+              Dodaj novi sadržaj
             </h2>
 
             <input type="text" placeholder="Naziv" value={newContent.title}
